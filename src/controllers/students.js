@@ -53,11 +53,23 @@ const updateStudent = async function (req, res) {
     request.input('age', sql.Int, age);
     request.input('ecole_id', sql.Int, ecole_id);
     const result = await request.execute('updateStudent');
-    if (result.rowsAffected[0] > 0) return res.send({ msg: 'Student updated sucessfully' });
+    if (result.rowsAffected[0] > 0) return res.send({ msg: `Student ${firstName} updated sucessfully` });
+    if (result.rowsAffected[0] === 0) return res.send({ msg: `Student n°${req.params.id} does not exists` });
     res.status(400).send();
   } catch (error) {
-    // console.log(error);
     res.status(400).send(error);
   }
 };
-export { getStudents, createStudent, getStudent, updateStudent };
+
+const deleteStudent = async (req, res) => {
+  try {
+    const request = new sql.Request(req.app.locals.db);
+    request.input('id', sql.Int, req.params.id);
+    const result = await request.execute('deleteStudent');
+    if (result.rowsAffected[0] > 0) return res.send({ msg: `Student n°${req.params.id} deleted sucessfully` });
+    if (result.rowsAffected[0] === 0) return res.send({ msg: `Student n°${req.params.id} does not exists` });
+  } catch (error) {
+    res.status(400).send(error);
+  }
+};
+export { getStudents, createStudent, getStudent, updateStudent, deleteStudent };

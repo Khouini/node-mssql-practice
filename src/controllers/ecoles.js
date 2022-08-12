@@ -34,4 +34,30 @@ const getEcole = async (req, res) => {
   }
 };
 
-export { createEcole, getEcoles, getEcole };
+const updateEcole = async (req, res) => {
+  try {
+    const request = new sql.Request(req.app.locals.db);
+    request.input('id', sql.Int, req.params.id);
+    request.input('name', sql.NVarChar, req.body.name);
+    const result = await request.execute('updateEcole');
+    if (result.rowsAffected[0] > 0) return res.send({ msg: `Ecole n°${req.params.id} was updated sucessfully` });
+    if (result.rowsAffected[0] === 0) return res.send({ msg: `Ecole n°${req.params.id} does not exists` });
+    res.status(400).send();
+  } catch (error) {
+    res.status(400).send(error);
+  }
+};
+const deleteEcole = async (req, res) => {
+  try {
+    const request = new sql.Request(req.app.locals.db);
+    request.input('id', sql.Int, req.params.id);
+    const result = await request.execute('deleteEcole');
+    if (result.rowsAffected[0] > 0) return res.send({ msg: `Ecole n°${req.params.id} was deleted sucessfully` });
+    if (result.rowsAffected[0] === 0) return res.send({ msg: `Ecole n°${req.params.id} does not exists` });
+    res.status(400).send();
+  } catch (error) {
+    res.status(400).send(error);
+  }
+};
+
+export { createEcole, getEcoles, getEcole, updateEcole, deleteEcole };
