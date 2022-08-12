@@ -1,14 +1,10 @@
 import express from 'express';
 let router = express.Router();
-import sql from 'mssql';
-router.get('/view1', async function (req, res) {
-  try {
-    const request = new sql.Request(req.app.locals.db);
-    const result = await request.execute('view1');
-    res.send(result.recordsets[0]);
-  } catch (error) {
-    res.send(error);
-  }
-});
+import { getEcoles, createEcole, getEcole } from '../controllers/ecoles.js';
+import { getStudents, createStudent, getStudent, updateStudent } from '../controllers/students.js';
 
+router.route('/students').get(getStudents).post(createStudent);
+router.route('/students/:id').get(getStudent).patch(updateStudent);
+router.route('/ecoles').get(getEcoles).post(createEcole);
+router.route('/ecoles/:id').get(getEcole);
 export default router;
