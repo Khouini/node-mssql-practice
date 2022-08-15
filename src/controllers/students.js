@@ -1,11 +1,31 @@
 import sql from 'mssql';
 import axios from 'axios';
-import { studentsSchema } from '../validations/validate.js';
+import { studentsSchema, studentsSortBySchema, paginationSchema, searchSchema } from '../validations/validate.js';
 import errorHandler from '../errors/errors.js';
 const getStudents = async function (req, res) {
   try {
+    let sortDescription = 'id',
+      sortOrder = 'asc',
+      pagination = '',
+      searchField = `where 1 = 1`;
+    if (req.query.sortBy) {
+      [sortDescription, sortOrder] = req.query.sortBy.split(':');
+      await studentsSortBySchema.validateAsync({ sortDescription, sortOrder });
+    }
+    if (req.query.skip && req.query.limit) {
+      const { skip, limit } = req.query;
+      await paginationSchema.validateAsync({ skip, limit });
+      pagination = `OFFSET ${limit} rows fetch next ${skip} rows only`;
+    }
+    if (req.query.search) {
+      const [searchDescription, searchItem] = req.query.search.split(':');
+      await searchSchema.validateAsync({ searchDescription });
+      searchField = `where ${searchDescription} like '%${searchItem}%'`;
+    }
     const request = new sql.Request(req.app.locals.db);
-    const result = await request.execute('getStudentsEcoles');
+    const result = await request.query(
+      `select * from [dbo].[viewStudents_Ecoles] ${searchField} order by ${sortDescription} ${sortOrder} ${pagination}`
+    );
     res.send(result.recordsets[0]);
   } catch (error) {
     return errorHandler(error, res);
@@ -15,8 +35,8 @@ const getStudents = async function (req, res) {
 const createStudent = async function (req, res) {
   try {
     await studentsSchema.validateAsync(req.body);
-    const request = new sql.Request(req.app.locals.db);
     const { firstName, lastName, age, ecole_id } = req.body;
+    const request = new sql.Request(req.app.locals.db);
     request.input('firstName', sql.NVarChar, firstName);
     request.input('lastName', sql.NVarChar, lastName);
     request.input('age', sql.Int, age);
